@@ -63,8 +63,8 @@ def checkRowValueInBorders(
     j <- i + 1 until coordinates.size
   } yield (coordinates(i), coordinates(j))
 
-  val columnBordersByRow = newGetRowColBorders(coordinates)
-  val rowBordersByColumn = newGetColRowBorders(coordinates)
+  val columnBordersByRow = getColumnBordersByRows(coordinates)
+  val rowBordersByColumn = getRowBordersByColumns(coordinates)
 
   val rectangleOptions = pairs.map(withComplementaryPoints)
 
@@ -153,7 +153,7 @@ def withComplementaryPoints(pair: (Coordinate, Coordinate)): Seq[Coordinate] =
     Seq(a, b, a.copy(col = b.col), b.copy(col = a.col))
   else Seq(a, b)
 
-def newGetRowColBorders(coordinates: Seq[Coordinate]): Map[Long, (Long, Long)] =
+def getColumnBordersByRows(coordinates: Seq[Coordinate]): Map[Long, (Long, Long)] =
   val cols = coordinates
     .groupBy(_.col)
     .map((col, coords) => col -> (coords.minBy(_.row), coords.maxBy(_.row)))
@@ -173,7 +173,7 @@ def newGetRowColBorders(coordinates: Seq[Coordinate]): Map[Long, (Long, Long)] =
     )
     .toMap
 
-def newGetColRowBorders(coordinates: Seq[Coordinate]): Map[Long, (Long, Long)] =
+def getRowBordersByColumns(coordinates: Seq[Coordinate]): Map[Long, (Long, Long)] =
   val rows = coordinates
     .groupBy(_.row)
     .map((row, coords) => row -> (coords.minBy(_.col), coords.maxBy(_.col)))
@@ -192,62 +192,3 @@ def newGetColRowBorders(coordinates: Seq[Coordinate]): Map[Long, (Long, Long)] =
       else None
     )
     .toMap
-
-def getColBorders(
-    point: Coordinate,
-    coordinates: Seq[Coordinate]
-): Option[(Long, Long)] =
-  val rows = coordinates
-    .groupBy(_.row)
-    .map((row, coords) => row -> (coords.minBy(_.col), coords.maxBy(_.col)))
-  val cols = coordinates
-    .groupBy(_.col)
-    .map((col, coords) => col -> (coords.minBy(_.row), coords.maxBy(_.row)))
-
-  val columnRowBorders = cols.toSeq
-    .sortBy(_._1)
-    .filter { case (l, (c1, c2)) =>
-      c1.row <= point.row && point.row <= c2.row
-    }
-
-  val maxColumnRowBorder =
-    columnRowBorders
-      .filter { case (l, (c1, c2)) => c1.col >= point.col }
-      .map(_._1)
-      .maxOption
-
-  val minColumnRowBorder =
-    columnRowBorders
-      .filter { case (l, (c1, c2)) => c1.col <= point.col }
-      .map(_._1)
-      .minOption
-
-  minColumnRowBorder.zip(maxColumnRowBorder)
-
-def getRowBorders(
-    point: Coordinate,
-    coordinates: Seq[Coordinate]
-): Option[(Long, Long)] =
-  val rows = coordinates
-    .groupBy(_.row)
-    .map((row, coords) => row -> (coords.minBy(_.col), coords.maxBy(_.col)))
-
-  val rowColumnBorders = rows.toSeq
-    .sortBy(_._1)
-    .filter { case (l, (c1, c2)) =>
-      c1.col <= point.col && point.col <= c2.col
-    }
-
-  val maxRowColumnBorder =
-    rowColumnBorders
-      .filter { case (l, (c1, c2)) => c1.row >= point.row }
-      .map(_._1)
-      .maxOption
-
-  val minRowColumnBorder =
-    rowColumnBorders
-      .filter { case (l, (c1, c2)) => c1.row <= point.row }
-      .map(_._1)
-      .minOption
-
-  minRowColumnBorder.zip(maxRowColumnBorder)
